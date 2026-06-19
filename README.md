@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# STJ Group — Property CRM
 
-## Getting Started
+A single-vendor real-estate CRM built with **Next.js 16 (App Router)**, **Prisma + SQLite**, **Tailwind CSS v4**, JWT auth, TanStack Query and Recharts.
 
-First, run the development server:
+Modules: Dashboard, Leads (table + kanban, channel-partner / project-name, duplicate-phone guard, CSV export), Customers (with per-customer Documents), Inventory (grid + table, notes), Data Centre, Sales, Follow-ups, Tasks (board), Payments, Reports, Settings, Notifications.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Login
+
+```
+Email:    admin@gmail.com
+Password: admin123
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Self-registration is disabled (single-admin). Change the password in **Settings → Change Password**.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Run locally
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+cp .env.example .env      # DATABASE_URL defaults to a local SQLite file
+npm run db:setup          # prisma db push + seed admin
+npm run dev               # http://localhost:3000
+```
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run dev        # Start dev server
+npm run build      # Production build
+npm run start      # Start production server
+npm run db:setup   # prisma db push + seed admin
+npm run db:seed    # seed admin only
+npm run db:studio  # Prisma Studio (DB browser)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Database is **SQLite** (`prisma/schema.prisma` → `provider = "sqlite"`), stored in a local
+  `dev.db` file (git-ignored). Note: serverless hosts like Vercel have a read-only/ephemeral
+  filesystem, so for a hosted writable deployment you'd switch the Prisma provider to a hosted
+  database (e.g. Postgres) and set `DATABASE_URL` accordingly.
+- **File uploads** (Documents) are written to `public/uploads` on local disk.
+- Sample/demo data is **not** seeded. The original demo seeder is preserved at
+  `prisma/seed.demo.ts` — run `npx tsx prisma/seed.demo.ts` for sample records.
+```

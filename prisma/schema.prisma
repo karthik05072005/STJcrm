@@ -1,0 +1,355 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  leads         Lead[]
+  customers     Customer[]
+  followUps     FollowUp[]
+  payments      Payment[]
+  documents     Document[]
+  tasks         Task[]
+  notifications Notification[]
+  activityLogs  ActivityLog[]
+  settings      Settings?
+}
+
+model Settings {
+  id             String  @id @default(cuid())
+  userId         String  @unique
+  companyName    String  @default("RealEstate CRM")
+  companyEmail   String?
+  companyPhone   String?
+  companyAddress String?
+  companyLogo    String?
+  currency       String  @default("INR")
+  dateFormat     String  @default("DD/MM/YYYY")
+  theme          String  @default("light")
+  emailNotif     Boolean @default(true)
+  smsNotif       Boolean @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Lead {
+  id           String    @id @default(cuid())
+  name         String
+  email        String?
+  phone        String
+  city         String?
+  budget       Float?
+  budgetMax    Float?
+  propertyType String?
+  source       String    @default("Direct")
+  status       String    @default("New")
+  priority     String    @default("Medium")
+  channelPartner String?
+  projectName    String?
+  notes        String?
+  assignedTo   String?
+  followUpDate DateTime?
+  isDeleted    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  userId    String
+  user      User       @relation(fields: [userId], references: [id])
+  followUps FollowUp[]
+  customer  Customer?
+  callLogs  CallLog[]
+}
+
+model CallLog {
+  id        String   @id @default(cuid())
+  leadId    String
+  type      String   @default("Call")
+  notes     String?
+  duration  Int?
+  createdAt DateTime @default(now())
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+model Customer {
+  id               String    @id @default(cuid())
+  leadId           String?   @unique
+  applicantName    String
+  applicantPhone   String
+  email            String?
+  dateOfBirth      DateTime?
+  dateOfAgreement  DateTime?
+  permanentAddress String?
+  currentAddress   String?
+  panCard          String?
+  aadharCard       String?
+
+  projectId     String?
+  unitId        String?
+  bookingStatus String  @default("Active")
+
+  allotmentLetter  Boolean @default(false)
+  tokenMoney       Boolean @default(false)
+  idProof          Boolean @default(false)
+  panCardDoc       Boolean @default(false)
+  agreementCopy    Boolean @default(false)
+  paymentPlan      Boolean @default(false)
+  bankDocuments    Boolean @default(false)
+  possessionLetter Boolean @default(false)
+
+  notes     String?
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  user      User       @relation(fields: [userId], references: [id])
+  lead      Lead?      @relation(fields: [leadId], references: [id])
+  project   Project?   @relation(fields: [projectId], references: [id])
+  unit      Unit?      @relation(fields: [unitId], references: [id])
+  payments  Payment[]
+  documents Document[]
+  bookings  Booking[]
+}
+
+model Project {
+  id              String    @id @default(cuid())
+  name            String
+  description     String?
+  location        String?
+  city            String?
+  state           String?
+  pincode         String?
+  type            String    @default("Residential")
+  status          String    @default("Under Construction")
+  totalUnits      Int       @default(0)
+  reraNumber      String?
+  reraExpiry      DateTime?
+  totalArea       Float?
+  launchDate      DateTime?
+  possessionDate  DateTime?
+  minPrice        Float?
+  maxPrice        Float?
+  mainImage       String?
+  brochure        String?
+  amenities       String?
+  nearbyLandmarks String?
+  isDeleted       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  towers    Tower[]
+  customers Customer[]
+  units     Unit[]
+}
+
+model Tower {
+  id          String   @id @default(cuid())
+  projectId   String
+  name        String
+  totalFloors Int      @default(0)
+  totalUnits  Int      @default(0)
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  floors  Floor[]
+  units   Unit[]
+}
+
+model Floor {
+  id        String   @id @default(cuid())
+  towerId   String
+  number    Int
+  name      String?
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  tower Tower  @relation(fields: [towerId], references: [id], onDelete: Cascade)
+  units Unit[]
+}
+
+model Unit {
+  id             String    @id @default(cuid())
+  projectId      String
+  towerId        String?
+  floorId        String?
+  unitNumber     String
+  type           String    @default("Apartment")
+  size           Float?
+  sizeUnit       String    @default("sqft")
+  facing         String?
+  price          Float?
+  plcCharges     Float?
+  parkingCharges Float?
+  otherCharges   Float?
+  totalPrice     Float?
+  status         String    @default("Available")
+  furnishing     String    @default("Unfurnished")
+  bedrooms       Int?
+  bathrooms      Int?
+  balcony        Boolean   @default(false)
+  parking        Boolean   @default(false)
+  floorPlan      String?
+  description    String?
+  notes          String?
+  isDeleted      Boolean   @default(false)
+  reservedUntil  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  project   Project    @relation(fields: [projectId], references: [id])
+  tower     Tower?     @relation(fields: [towerId], references: [id])
+  floor     Floor?     @relation(fields: [floorId], references: [id])
+  customers Customer[]
+  bookings  Booking[]
+}
+
+model Booking {
+  id             String   @id @default(cuid())
+  customerId     String
+  unitId         String
+  bookingDate    DateTime @default(now())
+  bookingAmount  Float    @default(0)
+  totalAmount    Float    @default(0)
+  discountAmount Float    @default(0)
+  status         String   @default("Confirmed")
+  paymentPlan    String?
+  notes          String?
+  isDeleted      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  customer Customer  @relation(fields: [customerId], references: [id])
+  unit     Unit      @relation(fields: [unitId], references: [id])
+  payments Payment[]
+}
+
+model Payment {
+  id            String    @id @default(cuid())
+  customerId    String
+  bookingId     String?
+  amount        Float
+  paymentDate   DateTime  @default(now())
+  dueDate       DateTime?
+  paymentMode   String    @default("Bank Transfer")
+  transactionId String?
+  receiptNumber String?
+  type          String    @default("Installment")
+  status        String    @default("Paid")
+  notes         String?
+  isDeleted     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  userId   String
+  user     User     @relation(fields: [userId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+  booking  Booking? @relation(fields: [bookingId], references: [id])
+}
+
+model FollowUp {
+  id          String    @id @default(cuid())
+  leadId      String
+  title       String
+  description String?
+  dueDate     DateTime
+  type        String    @default("Call")
+  status      String    @default("Pending")
+  priority    String    @default("Medium")
+  isDeleted   Boolean   @default(false)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  lead   Lead   @relation(fields: [leadId], references: [id])
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  customerId  String?
+  name        String
+  fileName    String
+  filePath    String
+  fileSize    Int?
+  fileType    String?
+  category    String   @default("General")
+  description String?
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId   String
+  user     User      @relation(fields: [userId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   @default("info")
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  action      String
+  entity      String
+  entityId    String?
+  description String?
+  metadata    String?
+  createdAt   DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  status      String    @default("To Do")
+  priority    String    @default("Medium")
+  category    String    @default("General")
+  dueDate     DateTime?
+  relatedTo   String?
+  completedAt DateTime?
+  isDeleted   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
